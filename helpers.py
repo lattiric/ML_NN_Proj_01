@@ -1,5 +1,11 @@
 import pandas as pd
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
+from tensorflow import keras
+import tensorboard
+from datetime import datetime
 from tqdm.auto import tqdm
 
 def pre_process_input_data(filepath='./data/concept_net/tweets.csv',encoding='cp1252',num_samples=None,random_state=None): #Change encoding if not on windows
@@ -51,3 +57,29 @@ def load_embeddings(filename): #Stolen from Dr.Larson
     
     arr = np.vstack(rows)
     return pd.DataFrame(arr, index=labels, dtype='f')
+
+def generatSimpleDenseNetwork(return_callbacks = True):
+    model = Sequential()
+    model.add(tf.keras.Input(shape=(300,)))
+    model.add(layers.Dense(64,activation='relu'))
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(1,activation='sigmoid'))
+
+    optimizer = tf.keras.optimizers.Adam(
+        learning_rate=1e-3,
+    )
+    callbacks = []
+    model.compile(
+        optimizer=optimizer,
+        loss='binary_crossentropy',
+        metrics=['accuracy']
+    )
+    logdir="logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
+    callbacks.append(tensorboard_callback)
+
+    callbacks.append(tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, min_delta=0.001)) #Early stop
+    if return_callbacks:
+        return model, callbacks
+    else:
+        return model

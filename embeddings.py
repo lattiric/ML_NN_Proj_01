@@ -116,6 +116,7 @@ class EmbeddingGenerator:
         train_features = pca.fit_transform(train_features)
         val_features = pca.transform(val_features)
         test_features = pca.transform(test_features)
+        self.bert_pca = pca
 
 
 
@@ -129,6 +130,7 @@ class EmbeddingGenerator:
         _df = self.convert_df_multi_word_to_other_embedding(_df,text_col=text_col)
 
         max_vec_len = np.max([len(v) for v in _df['features']])
+        self.other_embedding_max_len = max_vec_len
 
         print(f'Max feature vec size: {max_vec_len}')
         _df['features'] = [v + [0] * (max_vec_len - len(v)) for v in _df['features']]
@@ -142,10 +144,17 @@ class EmbeddingGenerator:
         train_features = pca.fit_transform(train_features)
         val_features = pca.transform(val_features)
         test_features = pca.transform(test_features)
+
+        self.other_pca = pca
         return train_features,test_features,val_features,train_labels,test_labels,val_labels,train_text,test_text,val_text
 
 
-
+    def dempose_using_bert_pca(self,arr):
+        return [list(v) for v in self.bert_pca.transform(arr)]
+    def decompose_using_other_pca(self,arr):
+        _arr = np.array([list(v) + [0] * (self.other_embedding_max_len - len(v)) for v in arr])
+        print(_arr.shape)
+        return [list(v) for v in self.other_pca.transform(_arr) ]
     
     def get_train_test_val_with_other_embedding_single_word(self,df,text_col='text',batch_size=500,test_size=None,train_size=None,random_state=None,shuffle=True,stratify=None,n_components=300):
         """ Returns train_features,test_features,val_features,train_labels,test_labels,val_labels,train_text,test_text,val_text
@@ -158,7 +167,6 @@ class EmbeddingGenerator:
         train_features,val_features,train_labels,val_labels,train_text,val_text = train_test_split(train_features,train_labels,train_text,test_size=test_size,train_size=train_size,random_state=random_state,shuffle=shuffle,stratify=stratify)
 
         return train_features,test_features,val_features,train_labels,test_labels,val_labels,train_text,test_text,val_text
-
 
 if __name__ == "__main__":
     class tmp:
