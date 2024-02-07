@@ -109,7 +109,7 @@ class EmbeddingGenerator:
         _df = df.copy()
         _df = self.convert_df_to_bert_embedding(_df,text_col=text_col,batch_size=batch_size)
         x = np.array([x for x in _df['features']])
-        train_features,test_features,train_labels,test_labels,train_text,test_text = train_test_split(x,_df['target'],_df['text'],test_size=test_size,train_size=train_size,random_state=random_state,shuffle=shuffle,stratify=stratify)
+        train_features,test_features,train_labels,test_labels,train_text,test_text = train_test_split(x,_df['target'],_df[text_col],test_size=test_size,train_size=train_size,random_state=random_state,shuffle=shuffle,stratify=stratify)
         train_features,val_features,train_labels,val_labels,train_text,val_text = train_test_split(train_features,train_labels,train_text,test_size=test_size,train_size=train_size,random_state=random_state,shuffle=shuffle,stratify=stratify)
 
         pca = PCA(n_components=n_components)
@@ -137,7 +137,7 @@ class EmbeddingGenerator:
 
         x = np.array([x for x in _df['features']])
 
-        train_features,test_features,train_labels,test_labels,train_text,test_text = train_test_split(x,_df['target'].to_numpy(),_df['text'].to_numpy(),test_size=test_size,train_size=train_size,random_state=random_state,shuffle=shuffle,stratify=stratify)
+        train_features,test_features,train_labels,test_labels,train_text,test_text = train_test_split(x,_df['target'].to_numpy(),_df[text_col].to_numpy(),test_size=test_size,train_size=train_size,random_state=random_state,shuffle=shuffle,stratify=stratify)
         train_features,val_features,train_labels,val_labels,train_text,val_text = train_test_split(train_features,train_labels,train_text,test_size=test_size,train_size=train_size,random_state=random_state,shuffle=shuffle,stratify=stratify)
 
         pca = PCA(n_components=n_components)
@@ -163,7 +163,7 @@ class EmbeddingGenerator:
         _df = self.convert_df_single_word_to_other_embedding(_df,text_col=text_col)
 
         x = np.array([x for x in _df['features']])
-        train_features,test_features,train_labels,test_labels,train_text,test_text = train_test_split(x,_df['target'],_df['text'],test_size=test_size,train_size=train_size,random_state=random_state,shuffle=shuffle,stratify=stratify)
+        train_features,test_features,train_labels,test_labels,train_text,test_text = train_test_split(x,_df['target'],_df[text_col],test_size=test_size,train_size=train_size,random_state=random_state,shuffle=shuffle,stratify=stratify)
         train_features,val_features,train_labels,val_labels,train_text,val_text = train_test_split(train_features,train_labels,train_text,test_size=test_size,train_size=train_size,random_state=random_state,shuffle=shuffle,stratify=stratify)
 
         return train_features,test_features,val_features,train_labels,test_labels,val_labels,train_text,test_text,val_text
