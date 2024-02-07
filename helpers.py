@@ -40,7 +40,7 @@ def load_embeddings(filename): #Stolen from Dr.Larson
     labels = []
     rows = []
     with open(filename, encoding='utf-8') as infile:
-        for i, line in tqdm(enumerate(infile)):
+        for i, line in tqdm(enumerate(infile),total=2196017):
             items = line.rstrip().split(' ')
             if len(items) == 2:
                 # This is a header row giving the shape of the matrix
