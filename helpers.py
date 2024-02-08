@@ -8,7 +8,8 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Input, Dropout, Embedding
-
+import matplotlib.pyplot as plt
+import seaborn
 
 import tensorboard
 from datetime import datetime
@@ -105,7 +106,7 @@ def generateCNN(return_callbacks = True):
     callbacksCNN = []
     model.compile(loss='binary_crossentropy', 
             optimizer='rmsprop',
-            metrics=['acc'])
+            metrics=['accuracy'])
     
     callbacksCNN.append(tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, min_delta=0.001)) #Early stop
     if return_callbacks:
@@ -139,3 +140,71 @@ def generatSimpleRecurrentNetwork(return_callbacks = True):
         return simple_RNN, callbacks
     else:
         return simple_RNN
+
+def plot_model_stats(mdl1,mdl2,mdl1_name='Bert Classifier',mdl2_name = 'Glove Classifier'):
+    fig, axs = plt.subplots(2,2,sharex=True,figsize=(15,7))
+    axs[0,0].plot(mdl1.history['accuracy'])
+    axs[0,0].plot(mdl1.history['val_accuracy'])
+    axs[0,0].set_title(f'{mdl1_name} Accuracy')
+    axs[0,0].legend(['train','validation'],loc='lower right')
+    axs[0,0].sharey(axs[0,1])
+
+    axs[0,1].plot(mdl2.history['accuracy'])
+    axs[0,1].plot(mdl2.history['val_accuracy'])
+    axs[0,1].set_title(f'{mdl2_name} Accuracy')
+    axs[0,1].legend(['train','validation'],loc='lower right')
+    
+    
+    axs[1,0].sharey(axs[1,1])
+    axs[1,0].plot(mdl1.history['loss'])
+    axs[1,0].plot(mdl1.history['val_loss'])
+    axs[1,0].set_title(f'{mdl1_name} Loss')
+    axs[1,0].legend(['train','validation'],loc='upper right')
+    
+    axs[1,1].plot(mdl2.history['loss'])
+    axs[1,1].plot(mdl2.history['val_loss'])
+    axs[1,1].set_title(f'{mdl2_name} Loss')
+    axs[1,1].legend(['train','validation'],loc='upper right')
+
+    for ax in axs.flat:
+        ax.grid()
+        ax.set(xlabel='Epoch')
+
+def plot_test_hists(diff_1,diff_2,name_1,name_2,figsize=(10,5)):
+    fig, (ax1,ax2) = plt.subplots(1,2,figsize=figsize,sharey=True)
+    counts_1,bins_1 = np.histogram(diff_1,10)
+    counts_2,bins_2 = np.histogram(diff_2,10)
+    ax1.hist(bins_1[:-1],bins_1,weights=counts_1)
+    ax2.hist(bins_2[:-1],bins_2,weights=counts_2)
+
+    ax1.set_title(name_1)
+    ax2.set_title(name_2)
+    ax1.grid()
+    ax2.grid()
+
+def result_plotter(data,x,y1,y2,y_lim=[0,1],y1_name='Bert',y2_name='Glove'):
+    fig,axs = plt.subplots(2,2,figsize=(15,5),layout='tight')
+
+    # plt.figure(figsize=(15,5))
+    # plt.subplot(121)
+    seaborn.swarmplot(x=x, y=y1, data=data,ax=axs[0,0])
+    seaborn.barplot(x=x, y=y1, data=data, capsize=.1,ax=axs[0,1])
+    axs[0,0].set(title=f'{y1_name} Swarm Plot')
+    axs[0,1].set(title=f'{y1_name} Bar Plot')
+
+    seaborn.swarmplot(x=x, y=y2, data=data,ax=axs[1,0])
+    seaborn.barplot(x=x, y=y2, data=data, capsize=.1,ax=axs[1,1])
+    for ax in axs.flat:
+        ax.set(ylim=y_lim)
+        ax.set(xlabel='Group')
+    axs[0,0].set(xlabel='')
+    axs[0,1].set(xlabel='')
+    
+    axs[1,1].set(ylabel='')
+    axs[0,1].set(ylabel='')
+
+    axs[0,0].set(ylabel=f'Sentiment Score')
+    axs[1,0].set(ylabel='Sentiment Score')
+    
+    axs[1,0].set(title=f'{y2_name} Swarm Plot')
+    axs[1,1].set(title=f'{y2_name} Bar Plot')
