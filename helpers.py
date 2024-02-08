@@ -4,6 +4,12 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers
 from tensorflow import keras
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Input, Dropout, Embedding
+
+
 import tensorboard
 from datetime import datetime
 from tqdm.auto import tqdm
@@ -83,3 +89,53 @@ def generatSimpleDenseNetwork(return_callbacks = True):
         return model, callbacks
     else:
         return model
+    
+def generateCNN(return_callbacks = True):
+    #ensure the input is the 300 dim vector
+    sequence_input = Input(shape=(300,1), dtype='float32')
+    x = Conv1D(128, 5, activation='relu', kernel_initializer='he_uniform')(sequence_input)
+    x = MaxPooling1D(5)(x)
+    x = Dropout(0.2)(x)
+
+    x = Flatten()(x)
+    x = Dense(64, activation='relu', kernel_initializer='he_uniform')(x)
+    preds = Dense(1, activation='sigmoid', kernel_initializer='glorot_uniform')(x)
+
+    model = Model(sequence_input, preds)
+    callbacksCNN = []
+    model.compile(loss='binary_crossentropy', 
+            optimizer='rmsprop',
+            metrics=['acc'])
+    
+    callbacksCNN.append(tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, min_delta=0.001)) #Early stop
+    if return_callbacks:
+        return model, callbacksCNN
+    else:
+        return model
+    
+def generatSimpleRecurrentNetwork(return_callbacks = True):
+    RNN_STATESIZE = 100
+
+    rnns = []
+    input_holder = tf.keras.Input(shape=(300,1))
+    x = layers.SimpleRNN(RNN_STATESIZE, dropout=0.2, recurrent_dropout=0.2)(input_holder)
+    #use a different activation function
+    x = layers.Dense(1, activation='relu')(x)
+    simple_RNN = Model(inputs=input_holder,outputs=x)
+
+    opt = Adam(lr=0.0001, epsilon=0.0001, clipnorm=1.0)
+
+    callbacks = []
+    simple_RNN.compile(loss='binary_crossentropy', 
+              optimizer= opt, 
+              metrics=['accuracy'])
+
+    #logdir="logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    # tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
+    # callbacks.append(tensorboard_callback)
+
+    callbacks.append(tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, min_delta=0.001)) #Early stop
+    if return_callbacks:
+        return simple_RNN, callbacks
+    else:
+        return simple_RNN
