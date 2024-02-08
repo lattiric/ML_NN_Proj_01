@@ -93,10 +93,10 @@ def generatSimpleDenseNetwork(return_callbacks = True):
     
 def generateCNN(return_callbacks = True):
     #ensure the input is the 300 dim vector
-    sequence_input = Input(shape=(300,1), dtype='float32')
+    sequence_input = Input(shape=(300,1))
     x = Conv1D(128, 5, activation='relu', kernel_initializer='he_uniform')(sequence_input)
     x = MaxPooling1D(5)(x)
-    x = Dropout(0.2)(x)
+    x = Dropout(0.5)(x)
 
     x = Flatten()(x)
     x = Dense(64, activation='relu', kernel_initializer='he_uniform')(x)
@@ -104,9 +104,11 @@ def generateCNN(return_callbacks = True):
 
     model = Model(sequence_input, preds)
     callbacksCNN = []
+    
+    optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=1e-5,)
     model.compile(loss='binary_crossentropy', 
-            optimizer='rmsprop',
-            metrics=['accuracy'])
+            optimizer=optimizer,
+            metrics=['acc'])
     
     callbacksCNN.append(tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, min_delta=0.001)) #Early stop
     if return_callbacks:
