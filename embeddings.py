@@ -20,8 +20,10 @@ embeddingz = None #This is horrible practice but idgaf
 
 @lru_cache
 def embedding_for_word(word):
-    return list(globals()['embeddingz'].loc[word])
-
+    try:
+        return list(globals()['embeddingz'].loc[word])
+    except KeyError as e:
+        return []
 
 def _convert_sentence_to_embedding(sentence):
         features = []
@@ -65,6 +67,7 @@ class EmbeddingGenerator:
         batches = [(i,min(i+batch_size,len(df))) for i in range(0,len(df),batch_size)] #Split into smaller chunks
         _df = pd.DataFrame()
         max_twt_len = np.max([len(v) for v in df[text_col]])
+        self.max_token_length_for_bert = max_twt_len
         print(f'Grabbing BERT Embeddings with padding to {max_twt_len} characters')
         for lower,upper in tqdm(batches):
             chunk = df.iloc[lower:upper]
@@ -74,21 +77,32 @@ class EmbeddingGenerator:
             _df = pd.concat([_df,chunk])
         return _df
 
+    def convert_word_to_bert_embedding(self,word):
+        features = self.tokenizer([word],padding='max_length', truncation=True, return_tensors='tf',max_length=self.max_token_length_for_bert)
+        features = self.model(**features).last_hidden_state[:,0,:]
+
+        return self.dempose_using_bert_pca(features.numpy())
+    def convert_word_to_other_embedding(self,word):
+        try:
+            return embedding_for_word(word)
+        except KeyError as e:
+            return None
     def convert_df_single_word_to_other_embedding(self,df,text_col='text',verbose=False):
         _df = df.copy()
         # globals()['embeddingz'] = self.embeddings.copy()
-        features = []
-        for word in tqdm(_df[text_col]):
-            try:
-                features.append(embedding_for_word(word))
-            except KeyError as e:
-                features.append(None)
-                if verbose:
-                    print(f'\"{word}\" not in embedding')
+        # for word in tqdm(_df[text_col]):
+        #     try:
+        #         features.append(embedding_for_word(word))
+        #     except KeyError as e:
+        #         features.append(None)
+        #         if verbose:
+        #             print(f'\"{word}\" not in embedding')
+        with Pool(cpu_count()) as p:
+            features = list(tqdm(p.imap(embedding_for_word,_df[text_col]),total=len(_df)))
         _df['features'] = features
-        print(f'Removing {len(_df[_df["features"].isnull()])} words that did not exist in embeddings') #TODO Fix array vs no arrays
+        print(f'Removing {len(_df[_df["features"].isin([list([])])])} words that did not exist in embeddings') #TODO Fix array vs no arrays
 
-        return _df.drop(_df.loc[_df['features'].isnull()].index, inplace=False)
+        return _df.drop(_df.loc[_df['features'].isin([list([])])].index, inplace=False)
     
     def convert_df_multi_word_to_other_embedding(self,df,text_col='text'):
         print('Converting multi word text into Other Embedding (Glove by default)')
@@ -98,8 +112,9 @@ class EmbeddingGenerator:
             features = list(tqdm(p.imap(_convert_sentence_to_embedding,_df[text_col]),total=len(_df)))            
         _df['features'] = features
 
-        print(f'Removing {len(_df[_df["features"].isnull()])} entries that did not exist in embeddings') #TODO Fix array vs no arrays
+        print(f'Removing {len(_df[_df["features"].isin([list([])])]) + len(_df[_df["features"].isnull()])} entries that did not exist in embeddings') #TODO Fix array vs no arrays
 
+        _df =  _df.drop(_df.loc[_df['features'].isin([list([])])].index, inplace=False)
         return _df.drop(_df.loc[_df['features'].isnull()].index, inplace=False)
 
     def get_train_test_val_with_bert(self,df,text_col='text',batch_size=500,test_size=None,train_size=None,random_state=None,shuffle=True,stratify=None,n_components=300):
