@@ -73,7 +73,7 @@ def generatSimpleDenseNetwork(return_callbacks = True):
     model.add(layers.Dense(1,activation='sigmoid'))
 
     optimizer = tf.keras.optimizers.Adam(
-        learning_rate=1e-3,
+        learning_rate=1e-4,
     )
     callbacks = []
     model.compile(
@@ -108,7 +108,7 @@ def generateCNN(return_callbacks = True):
     optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=1e-5,)
     model.compile(loss='binary_crossentropy', 
             optimizer=optimizer,
-            metrics=['acc'])
+            metrics=['accuracy'])
     
     callbacksCNN.append(tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, min_delta=0.001)) #Early stop
     if return_callbacks:
@@ -172,7 +172,7 @@ def plot_model_stats(mdl1,mdl2,mdl1_name='Bert Classifier',mdl2_name = 'Glove Cl
         ax.grid()
         ax.set(xlabel='Epoch')
 
-def plot_test_hists(diff_1,diff_2,name_1,name_2,figsize=(10,5)):
+def plot_test_hists(diff_1,diff_2,name_1,name_2,figsize=(15,7)):
     fig, (ax1,ax2) = plt.subplots(1,2,figsize=figsize,sharey=True)
     counts_1,bins_1 = np.histogram(diff_1,10)
     counts_2,bins_2 = np.histogram(diff_2,10)
@@ -185,7 +185,7 @@ def plot_test_hists(diff_1,diff_2,name_1,name_2,figsize=(10,5)):
     ax2.grid()
 
 def result_plotter(data,x,y1,y2,y_lim=[0,1],y1_name='Bert',y2_name='Glove'):
-    fig,axs = plt.subplots(2,2,figsize=(15,5),layout='tight')
+    fig,axs = plt.subplots(2,2,figsize=(20,8),layout='tight')
 
     # plt.figure(figsize=(15,5))
     # plt.subplot(121)
