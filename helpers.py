@@ -210,3 +210,43 @@ def result_plotter(data,x,y1,y2,y_lim=[0,1],y1_name='Bert',y2_name='Glove'):
     
     axs[1,0].set(title=f'{y2_name} Swarm Plot')
     axs[1,1].set(title=f'{y2_name} Bar Plot')
+
+# should get the variace of both the bert and glove bar charts given the dataframe that it plots
+# has yet to be tested
+def get_variance(result_df):
+    for p in result_df['bert_prediction']:
+        if p['group'] == "White":
+            bert_white += p["prediction"]
+        elif p['group'] == "Black":
+            bert_black += p["prediction"]
+        elif p['group'] == "Hispanic":
+            bert_hispanic += p["prediction"]
+        elif p['group'] == "Arab/Muslim":
+            bert_arab += p["prediction"]
+
+    for x in result_df['glove_prediction']:
+        if x['group'] == "White":
+            glove_white += x["prediction"]
+        elif x['group'] == "Black":
+            glove_black += x["prediction"]
+        elif x['group'] == "Hispanic":
+            glove_hispanic += x["prediction"]
+        elif x['group'] == "Arab/Muslim":
+            glove_arab += x["prediction"]
+
+    bert_white = bert_white/len(result_df[result_df['group'] == 'White'])
+    bert_black = bert_black/len(result_df[result_df['group'] == 'Black'])
+    bert_hispanic = bert_hispanic/len(result_df[result_df['group'] == 'Hispanic'])
+    bert_arab = bert_arab/len(result_df[result_df['group'] == 'Arab/Muslim'])
+    glove_white = glove_white/len(result_df[result_df['group'] == 'White'])
+    glove_black = glove_black/len(result_df[result_df['group'] == 'Black'])
+    glove_hispanic = glove_hispanic/len(result_df[result_df['group'] == 'Hispanic'])
+    glove_arab = glove_arab/len(result_df[result_df['group'] == 'Arab/Muslim'])
+
+    bert_avg = (bert_white + bert_black + bert_hispanic + bert_arab)/4
+    glove_avg = (glove_white + glove_black + glove_hispanic + glove_arab)/4
+
+    bert_inequality = abs(bert_white - bert_avg) + abs(bert_black - bert_avg) + abs(bert_hispanic - bert_avg) + abs(bert_arab - bert_avg)
+    glove_inequality = abs(glove_white - glove_avg) + abs(glove_black - glove_avg) + abs(glove_hispanic - glove_avg) + abs(glove_arab - glove_avg)
+
+    return bert_inequality, glove_inequality
