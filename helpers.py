@@ -210,6 +210,12 @@ def result_plotter(data,x,y1,y2,y_lim=[0,1],y1_name='Bert',y2_name='Glove'):
     
     axs[1,0].set(title=f'{y2_name} Swarm Plot')
     axs[1,1].set(title=f'{y2_name} Bar Plot')
+    
+    #print out the coefficient of variation for y1 and y2
+    #print(f'Coefficient of Variation for {y1_name}: {np.std(data[y1])/np.mean(data[y1])}')
+    #print(f'Coefficient of Variation for {y2_name}: {np.std(data[y2])/np.mean(data[y2])}')
+
+    
 
 # should get the variace of both the bert and glove bar charts given the dataframe that it plots
 # has yet to be tested
@@ -248,5 +254,26 @@ def get_variance(result_df):
 
     bert_inequality = abs(bert_white - bert_avg) + abs(bert_black - bert_avg) + abs(bert_hispanic - bert_avg) + abs(bert_arab - bert_avg)
     glove_inequality = abs(glove_white - glove_avg) + abs(glove_black - glove_avg) + abs(glove_hispanic - glove_avg) + abs(glove_arab - glove_avg)
+
+    return bert_inequality, glove_inequality
+
+
+def get_variance(result_df):
+    bert_counts = {'White': 0, 'Black': 0, 'Hispanic': 0, 'Arab/Muslim': 0}
+    glove_counts = {'White': 0, 'Black': 0, 'Hispanic': 0, 'Arab/Muslim': 0}
+
+    for _, p in result_df.iterrows():
+        group = p['group']
+        bert_counts[group] += p['bert_prediction']
+        glove_counts[group] += p['glove_prediction']
+
+    bert_averages = {group: count / len(result_df[result_df['group'] == group]) for group, count in bert_counts.items()}
+    glove_averages = {group: count / len(result_df[result_df['group'] == group]) for group, count in glove_counts.items()}
+
+    bert_avg = sum(bert_averages.values()) / len(bert_averages)
+    glove_avg = sum(glove_averages.values()) / len(glove_averages)
+
+    bert_inequality = sum(abs(count - bert_avg) for count in bert_averages.values())
+    glove_inequality = sum(abs(count - glove_avg) for count in glove_averages.values())
 
     return bert_inequality, glove_inequality
