@@ -258,22 +258,33 @@ def get_variance(result_df):
     return bert_inequality, glove_inequality
 
 
-def get_variance(result_df):
-    bert_counts = {'White': 0, 'Black': 0, 'Hispanic': 0, 'Arab/Muslim': 0}
-    glove_counts = {'White': 0, 'Black': 0, 'Hispanic': 0, 'Arab/Muslim': 0}
+def get_variance_stats(result_df):
+    # Calculate averages
+    bert_averages = result_df.groupby('group')['bert_prediction'].mean()
+    glove_averages = result_df.groupby('group')['glove_prediction'].mean()
 
-    for _, p in result_df.iterrows():
-        group = p['group']
-        bert_counts[group] += p['bert_prediction']
-        glove_counts[group] += p['glove_prediction']
+    bert_avg = bert_averages.mean()
+    glove_avg = glove_averages.mean()
 
-    bert_averages = {group: count / len(result_df[result_df['group'] == group]) for group, count in bert_counts.items()}
-    glove_averages = {group: count / len(result_df[result_df['group'] == group]) for group, count in glove_counts.items()}
+    # Calculate inequality
+    bert_inequality = bert_averages.sub(bert_avg).abs().sum()
+    glove_inequality = glove_averages.sub(glove_avg).abs().sum()
 
-    bert_avg = sum(bert_averages.values()) / len(bert_averages)
-    glove_avg = sum(glove_averages.values()) / len(glove_averages)
+    # Calculate standard deviations
+    bert_std = result_df.groupby('group')['bert_prediction'].std()
+    glove_std = result_df.groupby('group')['glove_prediction'].std()
 
-    bert_inequality = sum(abs(count - bert_avg) for count in bert_averages.values())
-    glove_inequality = sum(abs(count - glove_avg) for count in glove_averages.values())
+    # Calculate coefficient of variation
+    bert_cv = (bert_std / bert_averages).mean() * 100
+    glove_cv = (glove_std / glove_averages).mean() * 100
 
-    return bert_inequality, glove_inequality
+    return bert_inequality, bert_cv, glove_inequality, glove_cv
+
+
+def print_variance_stats(result_df, title_name="Variance Stats for: "):
+    bert_inequality, bert_cv, glove_inequality, glove_cv = get_variance_stats(result_df)
+    print(title_name)
+    print(f'Bert Inequality: {bert_inequality}')
+    print(f'Bert Coefficient of Variation: {bert_cv}')
+    print(f'Glove Inequality: {glove_inequality}')
+    print(f'Glove Coefficient of Variation: {glove_cv}')
