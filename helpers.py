@@ -115,33 +115,6 @@ def generateCNN(return_callbacks = True):
         return model, callbacksCNN
     else:
         return model
-    
-def generatSimpleRecurrentNetwork(return_callbacks = True):
-    RNN_STATESIZE = 100
-
-    rnns = []
-    input_holder = tf.keras.Input(shape=(300,1))
-    x = layers.SimpleRNN(RNN_STATESIZE, dropout=0.2, recurrent_dropout=0.2)(input_holder)
-    #use a different activation function
-    x = layers.Dense(1, activation='relu')(x)
-    simple_RNN = Model(inputs=input_holder,outputs=x)
-
-    opt = Adam(lr=0.0001, epsilon=0.0001, clipnorm=1.0)
-
-    callbacks = []
-    simple_RNN.compile(loss='binary_crossentropy', 
-              optimizer= opt, 
-              metrics=['accuracy'])
-
-    #logdir="logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-    # tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
-    # callbacks.append(tensorboard_callback)
-
-    callbacks.append(tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, min_delta=0.001)) #Early stop
-    if return_callbacks:
-        return simple_RNN, callbacks
-    else:
-        return simple_RNN
 
 def plot_model_stats(mdl1,mdl2,mdl1_name='Bert Classifier',mdl2_name = 'Glove Classifier'):
     fig, axs = plt.subplots(2,2,sharex=True,figsize=(15,7))
@@ -214,49 +187,6 @@ def result_plotter(data,x,y1,y2,y_lim=[0,1],y1_name='Bert',y2_name='Glove'):
     #print out the coefficient of variation for y1 and y2
     #print(f'Coefficient of Variation for {y1_name}: {np.std(data[y1])/np.mean(data[y1])}')
     #print(f'Coefficient of Variation for {y2_name}: {np.std(data[y2])/np.mean(data[y2])}')
-
-    
-
-# should get the variace of both the bert and glove bar charts given the dataframe that it plots
-# has yet to be tested
-def get_variance(result_df):
-    for p in result_df['bert_prediction']:
-        if p['group'] == "White":
-            bert_white += p["prediction"]
-        elif p['group'] == "Black":
-            bert_black += p["prediction"]
-        elif p['group'] == "Hispanic":
-            bert_hispanic += p["prediction"]
-        elif p['group'] == "Arab/Muslim":
-            bert_arab += p["prediction"]
-
-    for x in result_df['glove_prediction']:
-        if x['group'] == "White":
-            glove_white += x["prediction"]
-        elif x['group'] == "Black":
-            glove_black += x["prediction"]
-        elif x['group'] == "Hispanic":
-            glove_hispanic += x["prediction"]
-        elif x['group'] == "Arab/Muslim":
-            glove_arab += x["prediction"]
-
-    bert_white = bert_white/len(result_df[result_df['group'] == 'White'])
-    bert_black = bert_black/len(result_df[result_df['group'] == 'Black'])
-    bert_hispanic = bert_hispanic/len(result_df[result_df['group'] == 'Hispanic'])
-    bert_arab = bert_arab/len(result_df[result_df['group'] == 'Arab/Muslim'])
-    glove_white = glove_white/len(result_df[result_df['group'] == 'White'])
-    glove_black = glove_black/len(result_df[result_df['group'] == 'Black'])
-    glove_hispanic = glove_hispanic/len(result_df[result_df['group'] == 'Hispanic'])
-    glove_arab = glove_arab/len(result_df[result_df['group'] == 'Arab/Muslim'])
-
-    bert_avg = (bert_white + bert_black + bert_hispanic + bert_arab)/4
-    glove_avg = (glove_white + glove_black + glove_hispanic + glove_arab)/4
-
-    bert_inequality = abs(bert_white - bert_avg) + abs(bert_black - bert_avg) + abs(bert_hispanic - bert_avg) + abs(bert_arab - bert_avg)
-    glove_inequality = abs(glove_white - glove_avg) + abs(glove_black - glove_avg) + abs(glove_hispanic - glove_avg) + abs(glove_arab - glove_avg)
-
-    return bert_inequality, glove_inequality
-
 
 def get_variance_stats(result_df):
     # Calculate averages
